@@ -39,8 +39,9 @@ env/
 config.ini
 .env
 
-# Database
+# Database (but allow ai_news.db for GitHub Actions persistence)
 *.db
+!ai_news.db
 *.sqlite
 *.sqlite3
 
