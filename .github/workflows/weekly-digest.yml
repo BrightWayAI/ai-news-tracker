@@ -8,6 +8,9 @@ on:
   # Allow manual triggering
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   scrape-and-digest:
     runs-on: ubuntu-latest
@@ -18,6 +21,7 @@ jobs:
         with:
           # Fetch full history to preserve database
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
