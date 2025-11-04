@@ -1,0 +1,69 @@
+name: Weekly AI News Digest
+
+on:
+  # Run every Monday at 9 AM UTC
+  schedule:
+    - cron: '0 9 * * 1'
+
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  scrape-and-digest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history to preserve database
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Create config file from secrets
+        run: |
+          cat > config.ini << EOF
+          [email]
+          smtp_server = ${{ secrets.SMTP_SERVER }}
+          smtp_port = ${{ secrets.SMTP_PORT }}
+          sender_email = ${{ secrets.SENDER_EMAIL }}
+          sender_password = ${{ secrets.SENDER_PASSWORD }}
+          recipient_email = ${{ secrets.RECIPIENT_EMAIL }}
+
+          [scraper]
+          user_agent = Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
+
+          [storage]
+          database = ai_news.db
+          reports_dir = reports
+          EOF
+
+      - name: Run scraper and send digest
+        run: |
+          python main.py --all
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add ai_news.db reports/
+          git diff --staged --quiet || git commit -m "Update: Weekly AI news digest $(date +'%Y-%m-%d')"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload reports as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-reports
+          path: reports/
+          retention-days: 90
