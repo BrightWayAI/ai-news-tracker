@@ -24,6 +24,12 @@ class EmailSender:
         Returns True if successful, False otherwise
         """
         try:
+            # Sanitize input strings - replace non-breaking spaces and other problematic chars
+            subject = subject.replace('\xa0', ' ').replace('\u00a0', ' ')
+            html_content = html_content.replace('\xa0', ' ').replace('\u00a0', ' ')
+            if text_content:
+                text_content = text_content.replace('\xa0', ' ').replace('\u00a0', ' ')
+
             # Create message
             message = MIMEMultipart('alternative')
             message['Subject'] = Header(subject, 'utf-8')
