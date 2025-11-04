@@ -4,6 +4,7 @@ Email sender for AI news digests
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.header import Header
 from typing import Optional
 
 
@@ -25,7 +26,7 @@ class EmailSender:
         try:
             # Create message
             message = MIMEMultipart('alternative')
-            message['Subject'] = subject
+            message['Subject'] = Header(subject, 'utf-8')
             message['From'] = self.sender_email
             message['To'] = recipient_email
 
