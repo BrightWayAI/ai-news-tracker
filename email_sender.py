@@ -24,15 +24,16 @@ class EmailSender:
         Returns True if successful, False otherwise
         """
         try:
-            # Sanitize input strings - replace non-breaking spaces and other problematic chars
-            subject = subject.replace('\xa0', ' ').replace('\u00a0', ' ')
-            html_content = html_content.replace('\xa0', ' ').replace('\u00a0', ' ')
+            # Ensure all strings are properly encoded UTF-8 and sanitized
+            # Remove all non-ASCII characters that might cause issues
+            subject = subject.encode('ascii', errors='replace').decode('ascii')
+            html_content = html_content.encode('utf-8', errors='replace').decode('utf-8')
             if text_content:
-                text_content = text_content.replace('\xa0', ' ').replace('\u00a0', ' ')
+                text_content = text_content.encode('utf-8', errors='replace').decode('utf-8')
 
             # Create message
             message = MIMEMultipart('alternative')
-            message['Subject'] = Header(subject, 'utf-8')
+            message['Subject'] = subject
             message['From'] = self.sender_email
             message['To'] = recipient_email
 
@@ -45,11 +46,15 @@ class EmailSender:
             html_part = MIMEText(html_content, 'html', 'utf-8')
             message.attach(html_part)
 
-            # Send email
+            # Send email using sendmail instead of send_message for better encoding control
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
                 server.starttls()  # Enable TLS
                 server.login(self.sender_email, self.sender_password)
-                server.send_message(message)
+                server.sendmail(
+                    self.sender_email,
+                    recipient_email,
+                    message.as_string()
+                )
 
             print(f"Email sent successfully to {recipient_email}")
             return True
