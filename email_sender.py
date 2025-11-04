@@ -31,11 +31,11 @@ class EmailSender:
 
             # Add plain text version (if provided)
             if text_content:
-                text_part = MIMEText(text_content, 'plain')
+                text_part = MIMEText(text_content, 'plain', 'utf-8')
                 message.attach(text_part)
 
             # Add HTML version
-            html_part = MIMEText(html_content, 'html')
+            html_part = MIMEText(html_content, 'html', 'utf-8')
             message.attach(html_part)
 
             # Send email
